@@ -121,18 +121,21 @@ public abstract class RatMountBase extends PathfinderMob implements RatMount, Ad
 		TamedRat rat = this.getRat();
 		if (this.checkCooldown > 0) {
 			this.checkCooldown--;
-		} else {
-			if (rat != null) {
+		} else if (rat != null && !rat.isRemoved()) {
 				this.setTarget(rat.getTarget());
 				this.getLookControl().setLookAt(rat.getLookControl().getWantedX(), rat.getLookControl().getWantedY(), rat.getLookControl().getWantedZ());
 				rat.setYRot(this.getYRot());
 				rat.yRotO = this.getYRot();
 				rat.setYHeadRot(this.getYRot());
 				rat.yHeadRotO = this.getYRot();
-			} else {
-				this.discard();
-			}
+		} else if (rat == null) {
+			this.discard();
 		}
+	}
+
+	@Override
+	public boolean removeWhenFarAway(double dist) {
+		return this.getRat() == null;
 	}
 
 	@Override

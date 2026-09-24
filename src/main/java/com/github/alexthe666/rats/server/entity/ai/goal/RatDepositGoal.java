@@ -100,10 +100,6 @@ public class RatDepositGoal extends Goal implements RatWorkGoal {
 
 	@Override
 	public boolean canContinueToUse() {
-		if (RatUpgradeUtils.hasUpgrade(this.rat, RatsItemRegistry.RAT_UPGRADE_PLATTER.get())) {
-			if (this.rat.getMainHandItem().getCount() < 64 && this.getItemsOfTypeAround(this.rat.getMainHandItem()).isEmpty())
-				return false;
-		}
 		return this.targetBlock != null && !this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty() && this.rat.shouldDepositItem(this.rat.getMainHandItem());
 	}
 

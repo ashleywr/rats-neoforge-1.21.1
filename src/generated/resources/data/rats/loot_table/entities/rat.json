@@ -178,7 +178,7 @@
               "condition": "rats:has_toga_and_in_ratlantis"
             }
           ],
-          "name": "rats:gameplay/ratlantis_exclusive_rat_loot"
+          "value": "rats:gameplay/ratlantis_exclusive_rat_loot"
         }
       ],
       "functions": [

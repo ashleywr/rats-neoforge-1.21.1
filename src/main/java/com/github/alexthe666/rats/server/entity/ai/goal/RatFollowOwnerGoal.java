@@ -17,7 +17,6 @@ import java.util.EnumSet;
 public class RatFollowOwnerGoal extends FollowOwnerGoal {
 	private final TamedRat rat;
 	private final double speedModifier;
-	private int timeToRecalcPath;
 
 	public RatFollowOwnerGoal(TamedRat rat, double speedModifier, float startDist, float stopDist) {
 		super(rat, speedModifier, startDist, stopDist);
@@ -29,33 +28,41 @@ public class RatFollowOwnerGoal extends FollowOwnerGoal {
 	@Override
 	public boolean canUse() {
 		// 1.21: FollowOwnerGoal.unableToMove() was inlined; we replicate the equivalent gating here.
-		if (this.rat.isOrderedToSit() || this.rat.isLeashed() || this.rat.getVehicle() instanceof Player) {
+		if (this.rat.isInCage() || this.rat.isOrderedToSit() || this.rat.isLeashed() || this.rat.getVehicle() instanceof Player) {
 			return false;
 		}
-		return this.rat.canMove() && this.rat.isFollowing() && super.canUse();
+		return this.rat.getVehicle() instanceof RatMount ? this.rat.isFollowing() : this.rat.canMove() && this.rat.isFollowing() && super.canUse();
+	}
+
+	@Override
+	public boolean canContinueToUse() {
+		return !this.rat.isInCage() && super.canContinueToUse();
 	}
 
 	@Override
 	public void start() {
 		super.start();
-		this.rat.getNavigation().stop();
-		this.timeToRecalcPath = 0;
 	}
 
 	@Override
 	public void tick() {
-		// If the rat is riding a custom mount (RatMount) and the owner is far away, hop the whole
-		// mount to the owner instead of letting vanilla teleport just the passenger off the saddle.
-		if (--this.timeToRecalcPath <= 0) {
-			this.timeToRecalcPath = this.adjustedTickDelay(10);
-			LivingEntity owner = this.rat.getOwner();
-			if (owner != null && this.rat.distanceToSqr(owner) > 144.0D && this.rat.getVehicle() instanceof RatMount mount && mount.shouldTeleportWhenFarAway()) {
-				if (this.maybeTeleportMount(owner)) {
-					return;
-				}
-			}
+		LivingEntity owner = this.rat.getOwner();
+		if (owner == null) {
+			return;
 		}
-		super.tick();
+		double distanceToOwnerSq = this.rat.distanceToSqr(owner);
+		if (this.rat.getVehicle() instanceof RatMount mount && mount.shouldTeleportWhenFarAway() && distanceToOwnerSq > 144.0D && this.maybeTeleportMount(owner)) {
+			return;
+		}
+		if (this.rat.getVehicle() instanceof RatMount) {
+			if (distanceToOwnerSq > 16.0D) {
+				this.rat.getNavigation().moveTo(owner.getX(), owner.getY(), owner.getZ(), this.speedModifier);
+			}
+		} else if (distanceToOwnerSq > 36.0D) {
+			this.rat.getNavigation().moveTo(owner.getX(), owner.getY(), owner.getZ(), this.speedModifier);
+		} else {
+			this.rat.getNavigation().stop();
+		}
 	}
 
 	private boolean maybeTeleportMount(LivingEntity owner) {

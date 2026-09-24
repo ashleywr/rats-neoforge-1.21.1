@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class TrashCanBlockEntity extends BlockEntity {
 	public float lidProgress;
 	public float prevLidProgress;
+	public float partialTrashLevel;
 
 	public TrashCanBlockEntity(BlockPos pos, BlockState state) {
 		super(RatsBlockEntityRegistry.TRASH_CAN.get(), pos, state);
@@ -41,5 +42,17 @@ public class TrashCanBlockEntity extends BlockEntity {
 	@Override
 	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
 		return this.saveWithId(registries);
+	}
+
+	@Override
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
+		tag.putFloat("PartialTrashLevel", this.partialTrashLevel);
+	}
+
+	@Override
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		this.partialTrashLevel = tag.getFloat("PartialTrashLevel");
 	}
 }

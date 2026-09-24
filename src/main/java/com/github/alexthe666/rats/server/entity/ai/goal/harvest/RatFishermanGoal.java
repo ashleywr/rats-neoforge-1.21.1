@@ -26,6 +26,7 @@ import net.neoforged.neoforge.event.entity.player.ItemFishedEvent;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 public class RatFishermanGoal extends BaseRatHarvestGoal {
 	private final TamedRat rat;
@@ -132,8 +133,8 @@ public class RatFishermanGoal extends BaseRatHarvestGoal {
 
 		FishingHook hook = new FishingHook(player, this.rat.level(), this.rat.getRandom().nextInt(4), 0);
 		hook.setPos(this.rat.position());
-		// 1.21: EnchantmentHelper.enchantItem now takes (RandomSource, ItemStack, int, RegistryAccess, Optional<HolderSet<Enchantment>>); replace with a plain rod for now.
-		ItemStack rodTool = new ItemStack(Items.FISHING_ROD);
+		ItemStack rodTool = EnchantmentHelper.enchantItem(this.rat.getRandom(), new ItemStack(Items.FISHING_ROD), 100,
+				this.rat.level().registryAccess(), Optional.empty());
 		LootParams params = (new LootParams.Builder((ServerLevel) this.rat.level()))
 				.withParameter(LootContextParams.ORIGIN, this.rat.position())
 				.withParameter(LootContextParams.TOOL, rodTool)

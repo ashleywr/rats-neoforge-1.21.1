@@ -4,13 +4,11 @@ import com.github.alexthe666.rats.registry.RatsItemRegistry;
 import com.github.alexthe666.rats.server.entity.rat.TamedRat;
 import com.github.alexthe666.rats.server.misc.RatsLangConstants;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 import java.util.List;
 
@@ -28,10 +26,18 @@ public class RatStaffItem extends LoreTagItem {
 	@Override
 	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
 		super.appendHoverText(stack, context, tooltip, flag);
-		// 1.21: Item.appendHoverText no longer receives Level; use Minecraft.getInstance().level on the client.
-		net.minecraft.world.level.Level level = Minecraft.getInstance().level;
-		if (level != null && level.isClientSide() && Minecraft.getInstance().player != null) {
-			TamedRat rat = com.github.alexthe666.rats.server.capability.SelectedRat.get(Minecraft.getInstance().player);
+		if (FMLEnvironment.dist.isClient()) {
+			ClientOnly.appendSelectedRat(tooltip);
+		}
+	}
+
+	/** Keeps Minecraft and its LocalPlayer field out of this common item class on dedicated servers. */
+	private static final class ClientOnly {
+		private static void appendSelectedRat(List<Component> tooltip) {
+			var minecraft = net.minecraft.client.Minecraft.getInstance();
+			if (minecraft.level == null || minecraft.player == null) return;
+
+			TamedRat rat = com.github.alexthe666.rats.server.capability.SelectedRat.get(minecraft.player);
 			if (rat != null) {
 				tooltip.add(Component.translatable(RatsLangConstants.CHEESE_STAFF_SELECTED, rat.getDisplayName(), rat.getUUID().toString()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			}

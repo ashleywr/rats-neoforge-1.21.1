@@ -27,10 +27,10 @@ public class RatsBannerPatternTags extends BannerPatternTagsProvider {
 
 	@Override
 	protected void addTags(HolderLookup.Provider provider) {
-		this.tag(RAT_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_PATTERN.getKey());
-		this.tag(CHEESE_BANNER_PATTERN).add(RatsBannerPatternRegistry.CHEESE_PATTERN.getKey());
-		this.tag(RAC_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_AND_CROSSBONES_BANNER.getKey());
-		this.tag(RAS_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_AND_SICKLE_BANNER.getKey());
+		this.tag(RAT_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_PATTERN);
+		this.tag(CHEESE_BANNER_PATTERN).add(RatsBannerPatternRegistry.CHEESE_PATTERN);
+		this.tag(RAC_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_AND_CROSSBONES_BANNER);
+		this.tag(RAS_BANNER_PATTERN).add(RatsBannerPatternRegistry.RAT_AND_SICKLE_BANNER);
 	}
 
 	private static TagKey<BannerPattern> create(String name) {

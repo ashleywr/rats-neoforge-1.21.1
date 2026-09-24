@@ -448,15 +448,15 @@
         },
         {
           "type": "minecraft:loot_table",
-          "name": "rats:chest/hammocks"
+          "value": "rats:chest/hammocks"
         },
         {
           "type": "minecraft:loot_table",
-          "name": "rats:chest/igloos"
+          "value": "rats:chest/igloos"
         },
         {
           "type": "minecraft:loot_table",
-          "name": "rats:chest/tubes"
+          "value": "rats:chest/tubes"
         }
       ],
       "rolls": {

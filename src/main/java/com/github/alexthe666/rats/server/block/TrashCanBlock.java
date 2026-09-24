@@ -114,15 +114,34 @@ public class TrashCanBlock extends BaseEntityBlock implements WorldlyContainerHo
 					level.setBlockAndUpdate(pos, state.setValue(LEVEL, 0));
 					level.playSound(null, pos, RatsSoundRegistry.TRASH_CAN_EMPTY.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
 					return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide());
-				} else if (state.getValue(LEVEL) < 7 && stack.getItem() instanceof BlockItem bi) {
-					if (bi.getBlock().defaultBlockState().is(RatsBlockTags.TRASH_CAN_BLACKLIST)) {
+				} else if (state.getValue(LEVEL) < 7 && !stack.isEmpty()) {
+					if (stack.getItem() instanceof BlockItem bi && bi.getBlock().defaultBlockState().is(RatsBlockTags.TRASH_CAN_BLACKLIST)) {
 						player.displayClientMessage(Component.literal("This block can't be used here.").withStyle(ChatFormatting.RED), true);
 						return net.minecraft.world.ItemInteractionResult.CONSUME;
 					}
+					float garbageAmount = stack.getItem() instanceof BlockItem ? 1.0F : 0.45F;
 					if (!player.isCreative()) {
 						stack.shrink(1);
 					}
-					level.setBlockAndUpdate(pos, state.setValue(LEVEL, state.getValue(LEVEL) + 1));
+					if (te instanceof TrashCanBlockEntity trashCan) {
+						trashCan.partialTrashLevel += garbageAmount;
+						int fullLevels = (int) trashCan.partialTrashLevel;
+						if (fullLevels > 0) {
+							int newLevel = Math.min(7, state.getValue(LEVEL) + fullLevels);
+							trashCan.partialTrashLevel -= fullLevels;
+							level.setBlockAndUpdate(pos, state.setValue(LEVEL, newLevel));
+							if (newLevel == 7) {
+								if (!level.isClientSide()) {
+									ItemEntity item = new ItemEntity(level, pos.getX() + 0.5D, pos.getY() + 0.75D, pos.getZ() + 0.5D, new ItemStack(RatsBlockRegistry.GARBAGE_PILE.get()));
+									item.setDefaultPickUpDelay();
+									level.addFreshEntity(item);
+								}
+								level.setBlockAndUpdate(pos, state.setValue(LEVEL, 0));
+								level.playSound(null, pos, RatsSoundRegistry.TRASH_CAN_EMPTY.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+							}
+						}
+						trashCan.setChanged();
+					}
 					for (int i = 0; i < 100; i++) {
 						level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, RatsBlockRegistry.GARBAGE_PILE.get().defaultBlockState()),
 								pos.getX() + 0.4D + (level.getRandom().nextDouble() * 0.2D), pos.getY() + (((state.getValue(LEVEL) * 2) - 1.0D) * 0.1D), pos.getZ() + 0.4D + (level.getRandom().nextDouble() * 0.2D),
@@ -210,20 +229,24 @@ public class TrashCanBlock extends BaseEntityBlock implements WorldlyContainerHo
 
 	@Override
 	public WorldlyContainer getContainer(BlockState state, LevelAccessor accessor, BlockPos pos) {
-		return state.getValue(LEVEL) == 7 ? new OutputContainer(state, accessor, pos, new ItemStack(RatsBlockRegistry.GARBAGE_PILE.get())) : new InputContainer(state, accessor, pos);
+		BlockEntity blockEntity = accessor.getBlockEntity(pos);
+		TrashCanBlockEntity trashCan = blockEntity instanceof TrashCanBlockEntity entity ? entity : null;
+		return state.getValue(LEVEL) == 7 ? new OutputContainer(state, accessor, pos, new ItemStack(RatsBlockRegistry.GARBAGE_PILE.get())) : new InputContainer(state, accessor, pos, trashCan);
 	}
 
 	static class InputContainer extends SimpleContainer implements WorldlyContainer {
 		private final BlockState state;
 		private final LevelAccessor level;
 		private final BlockPos pos;
+		private final TrashCanBlockEntity trashCan;
 		private boolean changed;
 
-		public InputContainer(BlockState state, LevelAccessor accessor, BlockPos pos) {
-			super(1);
+		public InputContainer(BlockState state, LevelAccessor accessor, BlockPos pos, TrashCanBlockEntity trashCan) {
+			super(2);
 			this.state = state;
 			this.level = accessor;
 			this.pos = pos;
+			this.trashCan = trashCan;
 		}
 
 		@Override
@@ -233,12 +256,12 @@ public class TrashCanBlock extends BaseEntityBlock implements WorldlyContainerHo
 
 		@Override
 		public int[] getSlotsForFace(Direction direction) {
-			return direction != Direction.DOWN ? new int[]{0} : new int[0];
+			return direction != Direction.DOWN ? new int[]{0, 1} : new int[0];
 		}
 
 		@Override
 		public boolean canPlaceItemThroughFace(int amount, ItemStack stack, @Nullable Direction direction) {
-			return !this.changed && this.state.getValue(OPEN) && direction != Direction.DOWN && stack.getItem() instanceof BlockItem;
+			return !this.changed && this.state.getValue(OPEN) && direction != Direction.DOWN;
 		}
 
 		@Override
@@ -248,13 +271,24 @@ public class TrashCanBlock extends BaseEntityBlock implements WorldlyContainerHo
 
 		@Override
 		public void setChanged() {
-			ItemStack itemstack = this.getItem(0);
-			if (!itemstack.isEmpty()) {
-				this.changed = true;
-				this.level.setBlock(this.pos, this.state.cycle(LEVEL), 3);
-				this.removeItemNoUpdate(0);
+			for (int i = 0; i < 2; i++) {
+				ItemStack itemstack = this.getItem(i);
+				if (!itemstack.isEmpty()) {
+					this.changed = true;
+					float garbageAmount = itemstack.getItem() instanceof BlockItem ? 1.0F : 0.45F;
+					if (this.trashCan != null) {
+						this.trashCan.partialTrashLevel += garbageAmount;
+						int fullLevels = (int) this.trashCan.partialTrashLevel;
+						if (fullLevels > 0) {
+							int newLevel = Math.min(7, this.state.getValue(LEVEL) + fullLevels);
+							this.trashCan.partialTrashLevel -= fullLevels;
+							this.level.setBlock(this.pos, this.state.setValue(LEVEL, newLevel), 3);
+						}
+						this.trashCan.setChanged();
+					}
+					this.removeItemNoUpdate(i);
+				}
 			}
-
 		}
 	}
 

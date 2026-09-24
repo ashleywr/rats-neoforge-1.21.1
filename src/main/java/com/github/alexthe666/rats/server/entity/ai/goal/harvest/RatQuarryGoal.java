@@ -12,17 +12,22 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -162,7 +167,7 @@ public class RatQuarryGoal extends BaseRatHarvestGoal {
 							this.previousBreakProgress = -1;
 							BlockState state = this.rat.level().getBlockState(this.getTargetBlock());
 							if (!state.is(Blocks.SPONGE) && !state.is(Blocks.WET_SPONGE)) {
-								this.holdItemHarvestedIfPossible(this.rat, Block.getDrops(state, (ServerLevel) this.rat.level(), this.getTargetBlock(), null, this.rat, this.rat.getMainHandItem()));
+								this.depositItemsToQuarry(Block.getDrops(state, (ServerLevel) this.rat.level(), this.getTargetBlock(), null, this.rat, this.rat.getMainHandItem()));
 							}
 							this.rat.level().destroyBlock(this.getTargetBlock(), false);
 							this.stop();
@@ -170,6 +175,32 @@ public class RatQuarryGoal extends BaseRatHarvestGoal {
 						this.prevMiningState = block;
 					}
 				}
+			}
+		}
+	}
+
+	private void depositItemsToQuarry(List<ItemStack> items) {
+		if (this.rat.getDepositPos().isEmpty()) {
+			this.holdItemHarvestedIfPossible(this.rat, items);
+			return;
+		}
+		BlockEntity blockEntity = this.rat.level().getBlockEntity(this.rat.getDepositPos().get().pos());
+		if (blockEntity == null) {
+			this.holdItemHarvestedIfPossible(this.rat, items);
+			return;
+		}
+		IItemHandler handler = this.rat.level().getCapability(Capabilities.ItemHandler.BLOCK, blockEntity.getBlockPos(), this.rat.depositFacing);
+		if (handler == null) {
+			this.holdItemHarvestedIfPossible(this.rat, items);
+			return;
+		}
+		for (ItemStack stack : items) {
+			ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack.copy(), false);
+			if (!remaining.isEmpty()) {
+				ItemEntity item = new ItemEntity(this.rat.level(), this.rat.getX(), this.rat.getY(), this.rat.getZ(), remaining);
+				item.setExtendedLifetime();
+				item.setNoPickUpDelay();
+				this.rat.level().addFreshEntity(item);
 			}
 		}
 	}

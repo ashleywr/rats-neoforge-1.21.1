@@ -79,10 +79,6 @@ public class RatBiplaneMount extends RatMountBase implements Plane {
 		builder.define(PLANE_PITCH, 0F);
 	}
 
-	public boolean removeWhenFarAway(double dist) {
-		return false;
-	}
-
 	public float getPlanePitch() {
 		return getEntityData().get(PLANE_PITCH);
 	}

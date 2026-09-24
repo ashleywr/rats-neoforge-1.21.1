@@ -372,7 +372,9 @@ public class TamedRat extends InventoryRat {
 
 	@Override
 	public boolean removeWhenFarAway(double dist) {
-		return false;
+		return !this.isVehicle() && this.getCommand() != RatCommand.SIT && !this.isTame() && !this.hasCustomName() && this.getOwner() == null
+				? super.removeWhenFarAway(dist)
+				: false;
 	}
 
 	@Override
@@ -457,6 +459,10 @@ public class TamedRat extends InventoryRat {
 
 	@Override
 	public void aiStep() {
+		if (this.isPassenger() && this.getVehicle() instanceof RatMountBase) {
+			this.goalSelector.tick();
+			this.targetSelector.tick();
+		}
 		super.aiStep();
 		if (this.isBaby() && this.getCommand() != RatCommand.SIT) {
 			this.setCommand(RatCommand.SIT);

@@ -7,6 +7,8 @@ import com.github.alexthe666.rats.registry.worldgen.RatlantisDimensionRegistry;
 import com.github.alexthe666.rats.server.entity.ai.goal.RatEnterTrapGoal;
 import com.github.alexthe666.rats.server.entity.ai.goal.WildRatAvoidPlayerGoal;
 import com.github.alexthe666.rats.server.entity.ai.goal.WildRatDefendPlagueDoctorGoal;
+import com.github.alexthe666.rats.server.entity.ai.goal.WildRatEatCropsGoal;
+import com.github.alexthe666.rats.server.entity.ai.goal.WildRatRaidContainerGoal;
 import com.github.alexthe666.rats.server.entity.ai.goal.WildRatTargetFoodGoal;
 import com.github.alexthe666.rats.server.entity.monster.boss.RatKing;
 import com.github.alexthe666.rats.server.misc.RatUtils;
@@ -66,7 +68,7 @@ public class Rat extends DiggingRat {
 	public static AttributeSupplier.Builder createAttributes() {
 		return Mob.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, 8.0D)
-				.add(Attributes.MOVEMENT_SPEED, 0.35D)
+				.add(Attributes.MOVEMENT_SPEED, 0.25D)
 				.add(Attributes.FLYING_SPEED, 0.35D)
 				.add(Attributes.ATTACK_DAMAGE, 1.0D)
 				.add(Attributes.FOLLOW_RANGE, 12.0D);
@@ -77,7 +79,9 @@ public class Rat extends DiggingRat {
 		super.registerGoals();
 		this.goalSelector.addGoal(1, new WildRatAvoidPlayerGoal(this, entity -> AVOIDED_PLAYERS.test((Player) entity)));
 		this.goalSelector.addGoal(2, new RatEnterTrapGoal(this));
-		this.goalSelector.addGoal(6, new PanicGoal(this, 1.225D) {
+		this.goalSelector.addGoal(3, new WildRatEatCropsGoal(this));
+		this.goalSelector.addGoal(4, new WildRatRaidContainerGoal(this));
+		this.goalSelector.addGoal(6, new PanicGoal(this, 0.9D) {
 			@Override
 			protected boolean shouldPanic() {
 				return !Rat.this.hasPlague() && this.mob.getLastHurtByMob() instanceof Player;

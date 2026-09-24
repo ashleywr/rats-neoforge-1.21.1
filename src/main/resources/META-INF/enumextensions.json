@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "enum": "net/minecraft/world/entity/MobCategory",
+      "name": "RATS_RATS",
+      "constructor": "(Ljava/lang/String;IZZI)V",
+      "parameters": ["rats:rats", 25, true, false, 128]
+    },
+    {
+      "enum": "net/minecraft/world/item/Rarity",
+      "name": "RATS_RATLANTIS_SPECIAL",
+      "constructor": "(ILjava/lang/String;Lnet/minecraft/ChatFormatting;)V",
+      "parameters": {
+        "class": "com/github/alexthe666/rats/RatsEnumExtensions",
+        "field": "RATLANTIS_SPECIAL"
+      }
+    },
+    {
+      "enum": "net/minecraft/world/entity/raid/Raid$RaiderType",
+      "name": "RATS_PIPER",
+      "constructor": "(Ljava/util/function/Supplier;[I)V",
+      "parameters": {
+        "class": "com/github/alexthe666/rats/RatsEnumExtensions",
+        "field": "PIED_PIPER"
+      }
+    }
+  ]
+}

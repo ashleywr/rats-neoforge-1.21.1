@@ -33,7 +33,8 @@ public class RatTargetItemsGoal extends Goal {
 		if (!this.rat.canMove() || this.rat.isInCage() || this.rat.isCurrentlyWorking)
 			return false;
 
-		if (!this.rat.isTargetCommand() || this.rat.getDepositPos().isEmpty()) return false;
+		if (this.rat.getDepositPos().isEmpty()) return false;
+		if (!this.rat.getCommand().workCommand && !this.rat.isTargetCommand()) return false;
 
 		if (this.checkIfRatCanHold()) {
 			//sort through items we can grab, get the closest one

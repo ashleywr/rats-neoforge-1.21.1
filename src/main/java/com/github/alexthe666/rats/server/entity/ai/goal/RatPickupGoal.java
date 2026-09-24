@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -131,11 +132,11 @@ public class RatPickupGoal extends Goal implements RatWorkGoal {
 					//container is empty
 				}
 				if (slot != -1 && stack != ItemStack.EMPTY) {
-					ItemStack duplicate = stack.copy();
-					if (!this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty() && !this.rat.level().isClientSide()) {
-						this.rat.spawnAtLocation(this.rat.getItemInHand(InteractionHand.MAIN_HAND), 0.0F);
+					ItemStack oldItem = this.rat.getMainHandItem().copy();
+					if (!oldItem.isEmpty() && !this.rat.level().isClientSide()) {
+						this.rat.spawnAtLocation(oldItem, 0.0F);
 					}
-					this.rat.setItemInHand(InteractionHand.MAIN_HAND, duplicate);
+					this.rat.setItemSlot(EquipmentSlot.MAINHAND, stack);
 				}
 			}
 		} else if (this.type == PickupType.ENERGY) {

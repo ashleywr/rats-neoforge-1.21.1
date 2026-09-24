@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:loot_table",
-          "name": "rats:gameplay/fishing/ratlantis_junk",
+          "value": "rats:gameplay/fishing/ratlantis_junk",
           "quality": -2,
           "weight": 10
         },
@@ -24,13 +24,13 @@
               }
             }
           ],
-          "name": "rats:gameplay/fishing/ratlantis_treasure",
+          "value": "rats:gameplay/fishing/ratlantis_treasure",
           "quality": 2,
           "weight": 5
         },
         {
           "type": "minecraft:loot_table",
-          "name": "rats:gameplay/fishing/ratlantis_fish",
+          "value": "rats:gameplay/fishing/ratlantis_fish",
           "quality": -1,
           "weight": 85
         }

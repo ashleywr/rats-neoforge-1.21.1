@@ -65,11 +65,11 @@ import java.util.List;
 public class RatsMod {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MODID = "rats";
-	// 1.21: Rarity is a closed enum — reuse vanilla EPIC for the "special" Ratlantis tier.
-	public static final Rarity RATLANTIS_SPECIAL = Rarity.EPIC;
-	// 1.21: MobCategory is also a closed enum; rats spawn under the CREATURE category. The biome JSON
-	// no longer uses a custom "rats" category — entries were merged into the "creature" array.
-	public static final MobCategory RATS = MobCategory.CREATURE;
+	// Restored from 1.20 as a NeoForge enum-extension entry.
+	public static final Rarity RATLANTIS_SPECIAL = RatsEnumExtensions.RATLANTIS_SPECIAL.getValue();
+	// Restored from 1.20: this is an enum-extension entry declared in
+	// META-INF/enumextensions.json, with Rats' original independent cap of 25.
+	public static final MobCategory RATS = MobCategory.valueOf("RATS_RATS");
 
 	public static final BlockSetType PIRAT_WOOD_SET = new BlockSetType(
 		ResourceLocation.fromNamespaceAndPath(MODID, "pirat").toString(),
@@ -101,7 +101,6 @@ public class RatsMod {
 		RatVariantRegistry.RAT_VARIANTS.register(bus);
 
 		RatsArmorMaterialRegistry.ARMOR_MATERIALS.register(bus);
-		RatsBannerPatternRegistry.PATTERNS.register(bus);
 		RatsBlockRegistry.BLOCKS.register(bus);
 		RatsBlockEntityRegistry.BLOCK_ENTITIES.register(bus);
 		RatsEntityRegistry.ENTITIES.register(bus);
