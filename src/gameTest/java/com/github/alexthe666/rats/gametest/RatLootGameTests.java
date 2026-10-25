@@ -2,13 +2,18 @@ package com.github.alexthe666.rats.gametest;
 
 import com.github.alexthe666.rats.registry.RatsBlockRegistry;
 import com.github.alexthe666.rats.registry.RatsItemRegistry;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -18,6 +23,28 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /** Exercise the registered resource through the normal loader's loot pipeline. */
 @PrefixGameTestTemplate(false)
 public class RatLootGameTests {
+    @GameTest(templateNamespace = "rats", template = "ai_arena")
+    public static void ctovPetShopChestsGenerateLootWithoutDomesticationInnovation(GameTestHelper helper) {
+        var table = ResourceKey.create(Registries.LOOT_TABLE,
+                ResourceLocation.fromNamespaceAndPath("domesticationinnovation", "chests/petshop_chest"));
+        BlockPos position = new BlockPos(2, 1, 2);
+        RandomSource random = RandomSource.create(0x63746f76L);
+        for (int trial = 0; trial < 32; trial++) {
+            helper.setBlock(position, Blocks.CHEST);
+            var chest = (ChestBlockEntity) helper.getBlockEntity(position);
+            chest.clearContent();
+            chest.setLootTable(table);
+            // First seed comes directly from CTOV's beach pet-shop template.
+            chest.setLootTableSeed(trial == 0 ? 3312278768617651993L : random.nextLong());
+            chest.unpackLootTable(null);
+            helper.assertTrue(!chest.isEmpty(),
+                    "CTOV pet-shop chest must generate Rats loot without Domestication Innovation; empty trial " + trial);
+            helper.assertTrue(chest.getLootTable() == null, "Opening the chest must consume its loot-table reference");
+        }
+        System.out.println("CTOV_PETSHOP_LOOT_PROBE trials=32 nonempty=32");
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = "rats", template = "ai_arena")
     public static void plainToolsCanFindPlasticAndRetainGarbage(GameTestHelper helper) {
         for (ItemStack tool : new ItemStack[]{ItemStack.EMPTY, new ItemStack(Items.DIAMOND_PICKAXE)}) {
