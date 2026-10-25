@@ -43,6 +43,11 @@ public class ChefRatUpgradeItem extends BaseRatUpgradeItem implements TickRatUpg
 		} else {
 			rat.cookingProgress++;
 			if (rat.cookingProgress == 100) {
+				// The client timer drives particles; held items are changed only by the server.
+				if (rat.level().isClientSide()) {
+					rat.cookingProgress = 0;
+					return;
+				}
 				heldItem.shrink(1);
 				if (heldItem.isEmpty()) {
 					rat.setItemInHand(InteractionHand.MAIN_HAND, burntItem);

@@ -21,7 +21,7 @@ public record UpdateRatFluidPacket(int ratId, FluidStack fluid) implements Custo
 
     public static final StreamCodec<RegistryFriendlyByteBuf, UpdateRatFluidPacket> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, UpdateRatFluidPacket::ratId,
-                FluidStack.STREAM_CODEC, UpdateRatFluidPacket::fluid,
+                FluidStack.OPTIONAL_STREAM_CODEC, UpdateRatFluidPacket::fluid,
                 UpdateRatFluidPacket::new
         );
 

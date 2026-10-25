@@ -100,7 +100,15 @@ public class RatDepositGoal extends Goal implements RatWorkGoal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return this.targetBlock != null && !this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty() && this.rat.shouldDepositItem(this.rat.getMainHandItem());
+		return this.rat.isAlive() && this.rat.canMove() && this.rat.getCommand().workCommand && this.rat.getTarget() == null
+				&& this.targetBlock != null && this.rat.getDepositPos().filter(pos -> pos.dimension().equals(this.rat.level().dimension())
+						&& pos.pos().equals(this.targetBlock)).isPresent()
+				&& this.rat.level().getBlockEntity(this.targetBlock) != null
+				&& switch (this.type) {
+					case INVENTORY -> !this.rat.getMainHandItem().isEmpty() && this.rat.shouldDepositItem(this.rat.getMainHandItem());
+					case ENERGY -> this.rat.getHeldRF() > 0;
+					case FLUID -> !this.rat.transportingFluid.isEmpty();
+				};
 	}
 
 	@Override
@@ -111,6 +119,8 @@ public class RatDepositGoal extends Goal implements RatWorkGoal {
 	@Override
 	public void stop() {
 		this.rat.isCurrentlyWorking = false;
+		this.rat.getNavigation().stop();
+		this.targetBlock = null;
 	}
 
 	private Vec3 getMovePos() {
@@ -119,22 +129,24 @@ public class RatDepositGoal extends Goal implements RatWorkGoal {
 
 	@Override
 	public void tick() {
+		if (this.targetBlock == null) return;
 		BlockEntity te = this.rat.level().getBlockEntity(this.targetBlock);
-		if (this.targetBlock != null && te != null) {
-			this.rat.getNavigation().moveTo(this.getMovePos().x(), this.getMovePos().y(), this.getMovePos().z(), 1.25D);
-			double distance = Math.sqrt(this.rat.distanceToSqr(this.getMovePos().x(), this.getMovePos().y(), this.getMovePos().z()));
-			if (distance < 4.5D * this.rat.getRatDistanceModifier() && distance > 2.5D * this.rat.getRatDistanceModifier() && te instanceof Container container) {
-				this.toggleChest(container, true);
+		if (te == null) {
+			this.stop();
+			return;
+		}
+		this.rat.getNavigation().moveTo(this.getMovePos().x(), this.getMovePos().y(), this.getMovePos().z(), 1.25D);
+		double distance = Math.sqrt(this.rat.distanceToSqr(this.getMovePos().x(), this.getMovePos().y(), this.getMovePos().z()));
+		if (distance < 4.5D * this.rat.getRatDistanceModifier() && distance > 2.5D * this.rat.getRatDistanceModifier() && te instanceof Container container) {
+			this.toggleChest(container, true);
+		}
+		if (distance <= 2.0D * this.rat.getRatDistanceModifier()) {
+			if (te instanceof Container container) {
+				this.toggleChest(container, false);
 			}
-			if (distance <= 2.0D * this.rat.getRatDistanceModifier()) {
-				if (te instanceof Container container) {
-					this.toggleChest(container, false);
-				}
 
-				this.executeTask(te);
-				this.targetBlock = null;
-				this.stop();
-			}
+			this.executeTask(te);
+			this.stop();
 		}
 	}
 

@@ -9,7 +9,6 @@ import com.github.alexthe666.rats.server.entity.rat.TamedRat;
 import com.github.alexthe666.rats.server.misc.RatUtils;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -23,21 +22,22 @@ import java.util.List;
 
 public class WildRatTargetFoodGoal extends Goal {
 	private final AbstractRat rat;
-	private final PathNavigation navigation;
 	@Nullable
 	private ItemEntity targetItem = null;
+	@Nullable
+	private Path targetPath;
+	private int repathCooldown;
 	protected int nextStartTick;
 
 	public WildRatTargetFoodGoal(AbstractRat rat) {
 		this.rat = rat;
-		this.navigation = rat.getNavigation();
 		this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
 	}
 
 	@Override
 	public boolean canUse() {
 		//we only want the rat to pick up items if it can actually move around and has an empty hand
-		if (!this.rat.canMove() || this.rat.getOwner() != null || !this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty() || this.rat.isEating())
+		if (!this.canPickUpFood())
 			return false;
 
 		if (this.nextStartTick > 0) {
@@ -57,9 +57,10 @@ public class WildRatTargetFoodGoal extends Goal {
 
 		for (ItemEntity item : items) {
 			//please, only go after items you can actually reach
-			Path toPath = this.navigation.createPath(item, 1);
+			Path toPath = this.rat.getNavigation().createPath(item, 1);
 			if (toPath != null && toPath.canReach()) {
 				this.targetItem = item;
+				this.targetPath = toPath;
 				return true;
 			}
 		}
@@ -72,18 +73,33 @@ public class WildRatTargetFoodGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return this.rat.isAlive() && !this.navigation.isDone() && !this.navigation.isStuck() && this.targetItem != null && !this.targetItem.isRemoved();
+		return this.rat.isAlive() && this.canPickUpFood() && this.targetItem != null && !this.targetItem.isRemoved()
+				&& !this.targetItem.getItem().isEmpty() && RatUtils.isRatFood(this.targetItem.getItem()) && !this.rat.getNavigation().isStuck()
+				&& (this.rat.distanceToSqr(this.targetItem) < 4.5D || !this.rat.getNavigation().isDone());
+	}
+
+	private boolean canPickUpFood() {
+		return this.rat.canMove() && this.rat.getOwner() == null && this.rat.getTarget() == null
+				&& this.rat.getMainHandItem().isEmpty() && !this.rat.isEating();
 	}
 
 	@Override
 	public void start() {
-		if (this.targetItem != null) {
-			this.navigation.moveTo(this.targetItem, 1.25D);
-		}
+		this.repathCooldown = this.adjustedTickDelay(20);
+		this.rat.getNavigation().moveTo(this.targetPath, 1.25D);
+	}
+
+	@Override
+	public void stop() {
+		this.rat.getNavigation().stop();
+		this.targetItem = null;
+		this.targetPath = null;
 	}
 
 	@Override
 	public void tick() {
+		if (this.targetItem == null || this.targetItem.isRemoved()) return;
+		this.rat.getLookControl().setLookAt(this.targetItem, 30.0F, 30.0F);
 		if (this.targetItem != null && !this.targetItem.isRemoved() && this.rat.distanceToSqr(this.targetItem) < 4.5F && this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty()) {
 			ItemStack duplicate = this.targetItem.getItem().copy();
 			duplicate.setCount(1);
@@ -107,6 +123,15 @@ public class WildRatTargetFoodGoal extends Goal {
 				}
 			}
 			this.stop();
+		} else if (--this.repathCooldown <= 0) {
+			this.repathCooldown = this.adjustedTickDelay(20);
+			// Only replace the path when the dropped item moves; repeated moveTo calls reset stuck detection.
+			if (!this.targetItem.blockPosition().equals(this.rat.getNavigation().getTargetPos())) {
+				Path path = this.rat.getNavigation().createPath(this.targetItem, 1);
+				if (path == null || !path.canReach() || !this.rat.getNavigation().moveTo(path, 1.25D)) {
+					this.stop();
+				}
+			}
 		}
 	}
 }

@@ -27,6 +27,16 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations.gameTestImplementation.extendsFrom configurations.implementation
+configurations.gameTestRuntimeOnly.extendsFrom configurations.runtimeOnly
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs << '-Xlint:all,-classfile,-processing,-deprecation,-serial,-this-escape' << '-Xmaxerrs' << '5000'
@@ -46,6 +56,7 @@ repositories {
 
 neoForge {
     version = project.neoforge_version
+    addModdingDependenciesTo sourceSets.gameTest
 
     accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
     validateAccessTransformers = true
@@ -73,6 +84,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            gameDirectory = file('build/gametest')
         }
 
         data {
@@ -89,6 +101,7 @@ neoForge {
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
+            sourceSet sourceSets.gameTest
         }
     }
 }
@@ -98,6 +111,15 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 tasks.named('processResources', ProcessResources).configure {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    def metadataProperties = [
+            loader_version_range: project.loader_version_range,
+            neoforge_version_range: project.neoforge_version_range,
+            minecraft_version_range: project.minecraft_version_range
+    ]
+    inputs.properties metadataProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand metadataProperties
+    }
 }
 
 dependencies {

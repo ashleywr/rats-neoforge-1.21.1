@@ -14,6 +14,10 @@ public class RatFlightMoveControl extends RatMoveControl {
 		this.speedModifier = speedModifier;
 	}
 
+	public void stop() {
+		this.operation = Operation.WAIT;
+	}
+
 	public void tick() {
 		if (this.operation == MoveControl.Operation.MOVE_TO) {
 			Vec3 vector3d = new Vec3(this.wantedX - this.rat.getX(), this.wantedY - this.rat.getY(), this.wantedZ - this.rat.getZ());

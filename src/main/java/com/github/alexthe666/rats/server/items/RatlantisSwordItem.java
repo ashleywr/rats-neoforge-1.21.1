@@ -20,8 +20,8 @@ import java.util.List;
 public class RatlantisSwordItem extends SwordItem {
 
 	public RatlantisSwordItem(Item.Properties properties) {
-		// 1.21: SwordItem(Tier, Properties); damage/speed configured via Properties.attributes(...).
-		super(RatsToolMaterialRegistry.RATLANTIS, properties);
+		super(RatsToolMaterialRegistry.RATLANTIS,
+				properties.attributes(SwordItem.createAttributes(RatsToolMaterialRegistry.RATLANTIS, 3, -2.4F)));
 	}
 
 	@Override

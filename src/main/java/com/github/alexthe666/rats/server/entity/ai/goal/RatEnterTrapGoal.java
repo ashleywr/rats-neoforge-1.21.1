@@ -50,6 +50,12 @@ public class RatEnterTrapGoal extends RatMoveToBlockGoal {
 		return super.canContinueToUse() && !this.rat.isDeadInTrap() && this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty();
 	}
 
+	@Override
+	protected void moveMobToBlock() {
+		// A route to an adjacent block stops outside the trap's trigger area.
+		this.rat.getNavigation().moveTo(this.rat.getNavigation().createPath(this.getMoveToTarget(), 0), this.speedModifier);
+	}
+
 	public boolean canSeeTrap() {
 		BlockHitResult result = this.rat.level().clip(new ClipContext(this.rat.position(), Vec3.atCenterOf(this.blockPos), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.rat));
 		BlockPos pos = result.getBlockPos();

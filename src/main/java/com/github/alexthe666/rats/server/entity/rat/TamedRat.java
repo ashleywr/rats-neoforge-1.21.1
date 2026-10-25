@@ -68,6 +68,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.DyeItem;
@@ -168,6 +169,11 @@ public class TamedRat extends InventoryRat {
 		return 1.0F;
 	}
 
+	@Override
+	protected PathNavigation createNavigation(Level level) {
+		return new RatNavigation(this, level);
+	}
+
 	public static AttributeSupplier.Builder createAttributes() {
 		return Mob.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, 8.0D)
@@ -206,7 +212,7 @@ public class TamedRat extends InventoryRat {
 				return ((TamedRat) this.mob).sleepProgress <= 0.0F && super.canUse();
 			}
 		});
-		this.targetSelector.addGoal(0, new RatTargetItemsGoal(this));
+		this.goalSelector.addGoal(5, new RatTargetItemsGoal(this));
 		this.targetSelector.addGoal(1, this.targetGoal);
 		this.targetSelector.addGoal(2, new RatOwnerHurtByTargetGoal(this));
 		this.targetSelector.addGoal(3, new RatOwnerHurtTargetGoal(this));
@@ -259,15 +265,7 @@ public class TamedRat extends InventoryRat {
 
 			this.targetSelector.addGoal(1, this.targetGoal);
 
-			if (this.hasFlightUpgrade()) {
-				this.switchNavigator(1);
-			} else if (RatUpgradeUtils.hasUpgrade(this, RatsItemRegistry.RAT_UPGRADE_AQUATIC.get())) {
-				this.switchNavigator(3);
-			} else if (RatUpgradeUtils.hasUpgrade(this, RatlantisItemRegistry.RAT_UPGRADE_ETHEREAL.get())) {
-				this.switchNavigator(4);
-			} else {
-				this.switchNavigator(this.isInCage() ? 5 : this.isInTube() ? 2 : 0);
-			}
+			this.switchNavigator(this.getDesiredNavigatorType());
 		}
 	}
 
@@ -291,6 +289,8 @@ public class TamedRat extends InventoryRat {
 	}
 
 	public void switchNavigator(int type) {
+		if (this.navigatorType == type) return;
+		this.navigation.stop();
 		if (type == 0) { //tamed
 			this.moveControl = new RatMoveControl(this);
 			this.navigation = new RatNavigation(this, this.level());
@@ -316,6 +316,15 @@ public class TamedRat extends InventoryRat {
 			this.navigation = new RatNavigation(this, this.level());
 			this.navigatorType = 5;
 		}
+	}
+
+	private int getDesiredNavigatorType() {
+		if (this.isInCage()) return 5;
+		if (this.isInTube()) return 2;
+		if (this.hasFlightUpgrade()) return 1;
+		if (RatUpgradeUtils.hasUpgrade(this, RatsItemRegistry.RAT_UPGRADE_AQUATIC.get())) return 3;
+		if (RatUpgradeUtils.hasUpgrade(this, RatlantisItemRegistry.RAT_UPGRADE_ETHEREAL.get())) return 4;
+		return 0;
 	}
 
 	@Override
@@ -514,18 +523,9 @@ public class TamedRat extends InventoryRat {
 			});
 		}
 
-		if (this.updateNavigationCooldown-- == 0) {
+		if (this.updateNavigationCooldown-- <= 0) {
 			this.updateNavigationCooldown = 60;
-			int savedNav = this.navigatorType;
-			if (this.isInCage()) {
-				this.switchNavigator(5);
-			} else if (this.isInTube()) {
-				this.switchNavigator(2);
-			} else if (this.hasFlightUpgrade()) {
-				this.switchNavigator(1);
-			} else {
-				this.switchNavigator(savedNav);
-			}
+			this.switchNavigator(this.getDesiredNavigatorType());
 		}
 
 		this.setNoGravity(this.isFlying());
@@ -1301,7 +1301,8 @@ public class TamedRat extends InventoryRat {
 		}
 
 		RatUpgradeUtils.forEachUpgrade(this, item -> item instanceof StatBoostingUpgrade, (stack, slot) ->
-				((StatBoostingUpgrade) stack.getItem()).getAttributeBoosts().forEach((attribute, aDouble) -> this.tryIncreaseStat(stack.getHoverName().getString(), attribute, aDouble)));
+				((StatBoostingUpgrade) stack.getItem()).getAttributeBoosts().forEach((attribute, aDouble) ->
+						this.tryIncreaseStat(BuiltInRegistries.ITEM.getKey(stack.getItem()) + "/" + slot.getName(), attribute, aDouble)));
 
 		if (this.getHeldRF() > this.getRFTransferRate()) {
 			this.setHeldRF(this.getRFTransferRate());
@@ -1312,7 +1313,7 @@ public class TamedRat extends InventoryRat {
 	}
 
 	public void tryIncreaseStat(String itemName, net.minecraft.core.Holder<Attribute> stat, double value) {
-		net.minecraft.resources.ResourceLocation modifierId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("rats", "stat_modifier_" + itemName.toLowerCase().replaceAll("[^a-z0-9_]", "_"));
+		ResourceLocation modifierId = ResourceLocation.fromNamespaceAndPath("rats", "stat_modifier/" + itemName.replace(':', '/'));
 		AttributeModifier modifier = new AttributeModifier(modifierId, value, AttributeModifier.Operation.ADD_VALUE);
 		Objects.requireNonNull(this.getAttribute(stat)).addTransientModifier(modifier);
 		this.attributeChanges.put(stat, modifier);

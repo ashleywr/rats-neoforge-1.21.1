@@ -1,11 +1,12 @@
 package com.github.alexthe666.rats.server.entity.ai.navigation.navigation;
 
 import com.github.alexthe666.rats.server.entity.rat.TamedRat;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import com.github.alexthe666.rats.server.entity.ai.navigation.control.RatFlightMoveControl;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 
-public class RatFlightNavigation extends GroundPathNavigation {
+public class RatFlightNavigation extends FlyingPathNavigation {
 
 	public final TamedRat rat;
 
@@ -14,17 +15,23 @@ public class RatFlightNavigation extends GroundPathNavigation {
 		this.rat = rat;
 	}
 
-	public void tick() {
-		this.tick++;
+	@Override
+	public boolean moveTo(Path path, double speed) {
+		// FlyingPathNavigation consumes the path even when the rat is airborne.
+		boolean started = super.moveTo(path, speed);
+		if (started) {
+			this.rat.setFlying(true);
+		} else {
+			this.stop();
+		}
+		return started;
 	}
 
-	public boolean moveTo(double x, double y, double z, double speed) {
-		this.rat.getMoveControl().setWantedPosition(x, y, z, speed);
-		return true;
-	}
-
-	public boolean moveTo(Entity entity, double speed) {
-		this.rat.getMoveControl().setWantedPosition(entity.getX(), entity.getY(), entity.getZ(), speed);
-		return true;
+	@Override
+	public void stop() {
+		super.stop();
+		if (this.rat.getMoveControl() instanceof RatFlightMoveControl control) {
+			control.stop();
+		}
 	}
 }

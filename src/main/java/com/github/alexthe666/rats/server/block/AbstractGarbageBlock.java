@@ -61,7 +61,7 @@ public abstract class AbstractGarbageBlock extends FallingBlock {
 							if (!level.getGameRules().getBoolean(RatsMod.SPAWN_RATS)) return;
 							if (Objects.requireNonNull(level.getChunkSource().getLastSpawnState()).getMobCategoryCounts().getInt(RatsMod.RATS) >= RatsMod.RATS.getMaxInstancesPerChunk() * 2)
 								return;
-							if (RatConfig.ratsSpawnLikeMonsters && !this.isDarkEnoughForMonsterSpawns(level, mob.blockPosition(), random))
+							if (RatConfig.ratsSpawnLikeMonsters && !this.canSpawnRatInLight(level, mob.blockPosition(), random))
 								return;
 							EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(pos), this.spawnReason, null);
 							this.postInitSpawn(mob, random);
@@ -79,6 +79,14 @@ public abstract class AbstractGarbageBlock extends FallingBlock {
 				}
 			}
 		}
+	}
+
+	private boolean canSpawnRatInLight(ServerLevel level, BlockPos pos, RandomSource random) {
+		return switch (RatConfig.garbageRatSpawnLightRule) {
+			case DARK -> this.isDarkEnoughForMonsterSpawns(level, pos, random);
+			case NIGHT -> level.isNight();
+			case ANY -> true;
+		};
 	}
 
 	//copy of Monster.isDarkEnoughToSpawn but without that strange sky check thing

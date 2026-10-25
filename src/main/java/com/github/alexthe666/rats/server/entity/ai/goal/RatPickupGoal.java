@@ -59,7 +59,7 @@ public class RatPickupGoal extends Goal implements RatWorkGoal {
 			}
 		}
 		this.resetTarget();
-		return this.targetBlock != null;
+		return this.targetBlock != null && this.rat.level().getBlockEntity(this.targetBlock) != null;
 	}
 
 	private boolean canPickUp() {
@@ -72,7 +72,15 @@ public class RatPickupGoal extends Goal implements RatWorkGoal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return this.targetBlock != null && this.rat.getItemInHand(InteractionHand.MAIN_HAND).isEmpty();
+		return this.rat.isAlive() && this.rat.canMove() && this.canPickUp() && this.rat.getTarget() == null
+				&& this.targetBlock != null && this.rat.getPickupPos().filter(pos -> pos.dimension().equals(this.rat.level().dimension())
+						&& pos.pos().equals(this.targetBlock)).isPresent()
+				&& this.rat.level().getBlockEntity(this.targetBlock) != null
+				&& switch (this.type) {
+					case INVENTORY -> this.rat.getMainHandItem().isEmpty();
+					case ENERGY -> this.rat.getHeldRF() < this.rat.getRFTransferRate();
+					case FLUID -> this.rat.transportingFluid.isEmpty() || this.rat.transportingFluid.getAmount() < this.rat.getMBTransferRate();
+				};
 	}
 
 	@Override
@@ -83,26 +91,30 @@ public class RatPickupGoal extends Goal implements RatWorkGoal {
 	@Override
 	public void stop() {
 		this.rat.isCurrentlyWorking = false;
+		this.rat.getNavigation().stop();
+		this.targetBlock = null;
 	}
 
 	@Override
 	public void tick() {
+		if (this.targetBlock == null) return;
 		BlockEntity te = this.rat.level().getBlockEntity(this.targetBlock);
-		if (this.targetBlock != null && te != null) {
-			this.rat.getNavigation().moveTo(this.targetBlock.getX() + 0.5D, this.targetBlock.getY() + 0.5D, this.targetBlock.getZ() + 0.5D, 1.25D);
-			double distance = Math.sqrt(this.rat.getRatDistanceSq(this.targetBlock.getX() + 0.5D, this.targetBlock.getY() + 0.5D, this.targetBlock.getZ() + 0.5D));
-			if (distance < 3.5D * this.rat.getRatDistanceModifier() && distance > 2.5D * this.rat.getRatDistanceModifier() && te instanceof Container container) {
-				this.toggleChest(container, true);
+		if (te == null) {
+			this.stop();
+			return;
+		}
+		this.rat.getNavigation().moveTo(this.targetBlock.getX() + 0.5D, this.targetBlock.getY() + 0.5D, this.targetBlock.getZ() + 0.5D, 1.25D);
+		double distance = Math.sqrt(this.rat.getRatDistanceSq(this.targetBlock.getX() + 0.5D, this.targetBlock.getY() + 0.5D, this.targetBlock.getZ() + 0.5D));
+		if (distance < 3.5D * this.rat.getRatDistanceModifier() && distance > 2.5D * this.rat.getRatDistanceModifier() && te instanceof Container container) {
+			this.toggleChest(container, true);
+		}
+		if (distance <= 2.5D * this.rat.getRatDistanceModifier()) {
+			if (te instanceof Container container) {
+				this.toggleChest(container, false);
 			}
-			if (distance <= 2.5D * this.rat.getRatDistanceModifier()) {
-				if (te instanceof Container container) {
-					this.toggleChest(container, false);
-				}
 
-				this.executeTask(te);
-				this.targetBlock = null;
-				this.stop();
-			}
+			this.executeTask(te);
+			this.stop();
 		}
 	}
 

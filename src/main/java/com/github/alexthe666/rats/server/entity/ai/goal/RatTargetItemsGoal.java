@@ -21,6 +21,9 @@ public class RatTargetItemsGoal extends Goal {
 	private final TamedRat rat;
 	@Nullable
 	private ItemEntity targetItem = null;
+	@Nullable
+	private Path targetPath;
+	private int repathCooldown;
 
 	public RatTargetItemsGoal(TamedRat rat) {
 		this.rat = rat;
@@ -55,6 +58,7 @@ public class RatTargetItemsGoal extends Goal {
 							continue;
 					}
 					this.targetItem = item;
+					this.targetPath = toPath;
 					return true;
 				}
 			}
@@ -82,24 +86,30 @@ public class RatTargetItemsGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return this.rat.isAlive() && !this.rat.isCurrentlyWorking && !this.rat.getNavigation().isDone() && !this.rat.getNavigation().isStuck() && this.targetItem != null && !this.targetItem.isRemoved() && this.checkIfRatCanHold();
+		return this.rat.isAlive() && this.rat.canMove() && !this.rat.isInCage() && !this.rat.isCurrentlyWorking
+				&& this.rat.getDepositPos().isPresent() && (this.rat.getCommand().workCommand || this.rat.isTargetCommand())
+				&& !this.rat.getNavigation().isStuck() && this.targetItem != null && !this.targetItem.isRemoved()
+				&& !this.targetItem.getItem().isEmpty() && this.checkIfRatCanHold()
+				&& (this.rat.distanceToSqr(this.targetItem) < this.rat.getRatHarvestDistance(1.0D) || !this.rat.getNavigation().isDone());
 	}
 
 	@Override
 	public void start() {
-		if (this.targetItem != null) {
-			this.rat.getNavigation().moveTo(this.targetItem, 1.25D);
-		}
+		this.repathCooldown = this.adjustedTickDelay(20);
+		this.rat.getNavigation().moveTo(this.targetPath, 1.25D);
 	}
 
 	@Override
 	public void stop() {
+		this.rat.getNavigation().stop();
 		this.targetItem = null;
+		this.targetPath = null;
 	}
 
 	@Override
 	public void tick() {
 		if (this.targetItem != null && !this.targetItem.isRemoved()) {
+			this.rat.getLookControl().setLookAt(this.targetItem, 30.0F, 30.0F);
 			if (this.rat.distanceToSqr(this.targetItem) < this.rat.getRatHarvestDistance(1.0D)) {
 				ItemStack duplicate = this.targetItem.getItem().copy();
 				if (RatUpgradeUtils.hasUpgrade(this.rat, RatsItemRegistry.RAT_UPGRADE_PLATTER.get())) {
@@ -117,8 +127,14 @@ public class RatTargetItemsGoal extends Goal {
 					this.rat.setItemInHand(InteractionHand.MAIN_HAND, duplicate);
 				}
 				this.stop();
-			} else {
-				this.rat.getNavigation().moveTo(this.targetItem, 1.225F);
+			} else if (--this.repathCooldown <= 0) {
+				this.repathCooldown = this.adjustedTickDelay(20);
+				if (!this.targetItem.blockPosition().equals(this.rat.getNavigation().getTargetPos())) {
+					Path path = this.rat.getNavigation().createPath(this.targetItem, 1);
+					if (path == null || !path.canReach() || !this.rat.getNavigation().moveTo(path, 1.25D)) {
+						this.stop();
+					}
+				}
 			}
 		}
 	}

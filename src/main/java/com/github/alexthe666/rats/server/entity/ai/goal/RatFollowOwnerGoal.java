@@ -17,11 +17,13 @@ import java.util.EnumSet;
 public class RatFollowOwnerGoal extends FollowOwnerGoal {
 	private final TamedRat rat;
 	private final double speedModifier;
+	private final float stopDistance;
 
 	public RatFollowOwnerGoal(TamedRat rat, double speedModifier, float startDist, float stopDist) {
 		super(rat, speedModifier, startDist, stopDist);
 		this.rat = rat;
 		this.speedModifier = speedModifier;
+		this.stopDistance = stopDist;
 		this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 
@@ -36,7 +38,18 @@ public class RatFollowOwnerGoal extends FollowOwnerGoal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return !this.rat.isInCage() && super.canContinueToUse();
+		LivingEntity owner = this.rat.getOwner();
+		// Vanilla captures the constructor's navigator, which Rats replaces on mode changes.
+		return owner != null && this.rat.isAlive() && this.rat.isFollowing() && !this.rat.isInCage()
+				&& !this.rat.isOrderedToSit() && !this.rat.isLeashed() && !(this.rat.getVehicle() instanceof Player)
+				&& (this.rat.getVehicle() instanceof RatMount || this.rat.canMove())
+				&& !this.rat.getNavigation().isDone() && this.rat.distanceToSqr(owner) > this.stopDistance * this.stopDistance;
+	}
+
+	@Override
+	public void stop() {
+		super.stop();
+		this.rat.getNavigation().stop();
 	}
 
 	@Override

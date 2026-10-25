@@ -45,6 +45,11 @@ public class EnchanterRatUpgradeItem extends BaseRatUpgradeItem implements TickR
 		} else {
 			rat.cookingProgress++;
 			if (rat.cookingProgress == 1000) {
+				// The client timer drives particles; held items are changed only by the server.
+				if (rat.level().isClientSide()) {
+					rat.cookingProgress = 0;
+					return;
+				}
 				heldItem.shrink(1);
 				if (!disenchant) {
 					if (rat.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {

@@ -86,13 +86,15 @@ public class RatUpgradeUtils {
 						NonNullList<ItemStack> upgradeList = NonNullList.withSize(combined.getUpgradeSlots(), ItemStack.EMPTY);
 						ContainerHelper.loadAllItems(tag, upgradeList, rat.level().registryAccess());
 						for (ItemStack selectedUpgrade : upgradeList) {
-							if (selectedUpgrade.getItem() instanceof BaseRatUpgradeItem upgrade && function.apply(upgrade) != def) {
-								return function.apply(upgrade);
+							if (selectedUpgrade.getItem() instanceof BaseRatUpgradeItem upgrade) {
+								boolean result = function.apply(upgrade);
+								if (result != def) return result;
 							}
 						}
 					}
-				} else if (stack.getItem() instanceof BaseRatUpgradeItem upgrade && function.apply(upgrade) != def) {
-					return function.apply(upgrade);
+				} else if (stack.getItem() instanceof BaseRatUpgradeItem upgrade) {
+					boolean result = function.apply(upgrade);
+					if (result != def) return result;
 				}
 			}
 		}

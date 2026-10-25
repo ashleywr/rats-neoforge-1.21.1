@@ -25,7 +25,7 @@ public class RatPathingHelper {
 
 	public static boolean canSeeOrDigToBlock(DiggingRat rat, BlockPos destination) {
 		BlockHitResult result = clipWithConditions(rat.level(), new ClipContext(rat.position(), Vec3.atCenterOf(destination), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, rat), !rat.isOnDiggingCooldown());
-		return result.getType() == HitResult.Type.MISS;
+		return result.getType() == HitResult.Type.MISS || result.getBlockPos().equals(destination);
 	}
 
 	public static boolean canSeeBlock(AbstractRat rat, BlockPos destination) {

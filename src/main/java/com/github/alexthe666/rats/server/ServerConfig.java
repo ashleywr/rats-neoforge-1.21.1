@@ -1,5 +1,6 @@
 package com.github.alexthe666.rats.server;
 
+import com.github.alexthe666.rats.RatConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ServerConfig {
@@ -9,6 +10,7 @@ public class ServerConfig {
 	public final ModConfigSpec.IntValue ratSpawnDecrease;
 	public final ModConfigSpec.IntValue piperSpawnDecrease;
 	public final ModConfigSpec.BooleanValue ratsSpawnLikeMonsters;
+	public final ModConfigSpec.EnumValue<RatConfig.GarbageRatSpawnLightRule> garbageRatSpawnLightRule;
 	public final ModConfigSpec.BooleanValue cheesemaking;
 	public final ModConfigSpec.IntValue milkCauldronTime;
 	public final ModConfigSpec.IntValue ratSackCapacity;
@@ -111,8 +113,10 @@ public class ServerConfig {
 		this.ratlantisEnabledByDefault = buildBoolean(builder, "Ratlantis Datapack Enabled by Default", true, "If true, the ratlantis datapack will automatically be enabled when creating a new world.");
 
 		builder.pop().push("Spawning");
-		this.garbageSpawnRate = buildDouble(builder, "Garbage Pile Spawn Chance", 0.15F, 0F, 1.0F, "Chance for each loaded garbage pile to spawn its mob every 10 seconds.");
+		this.garbageSpawnRate = buildDouble(builder, "Garbage Pile Spawn Chance", 0.15F, 0F, 1.0F, "Chance per random tick for each garbage block to attempt spawning its mob. Blocks must be in actively ticking chunks.");
 		this.ratsSpawnLikeMonsters = buildBoolean(builder, "Rats Spawn Like Monsters", true, "True if rats should spawn like monsters, meaning they will also despawn when get far away (this only applies to wild rats of course). False if they should only spawn once per world, like pigs and sheep.");
+		this.garbageRatSpawnLightRule = builder.comment("Lighting required for rats spawned by garbage when Rats Spawn Like Monsters is enabled. DARK preserves the original darkness checks. NIGHT permits village lighting but only spawns at night. ANY permits daylight and village lighting. Natural rat spawning and Pied Garbage are unchanged.")
+				.defineEnum("Garbage Rat Spawn Light Rule", RatConfig.GarbageRatSpawnLightRule.DARK);
 		this.ratSpawnDecrease = buildInt(builder, "Rat Spawn Decrease", 5, 0, Integer.MAX_VALUE, "A separate random roll that only spawns rats if a one-out-of-X chance, x being this number. raise this number to make them more rare.");
 		this.piperSpawnDecrease = buildInt(builder, "Piper Spawn Decrease", 2, 0, Integer.MAX_VALUE, "A separate random roll that only spawns pipers if a one-out-of-X chance, x being this number. raise this number to make them more rare.");
 

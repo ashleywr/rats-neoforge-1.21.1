@@ -15,6 +15,8 @@ public class RatConfig {
 	public static int ratSpawnDecrease = 5;
 	public static int piperSpawnDecrease = 2;
 	public static boolean ratsSpawnLikeMonsters = true;
+	public enum GarbageRatSpawnLightRule { DARK, NIGHT, ANY }
+	public static GarbageRatSpawnLightRule garbageRatSpawnLightRule = GarbageRatSpawnLightRule.DARK;
 	public static boolean cheesemaking = true;
 	public static int milkCauldronTime = 150;
 	public static int ratSackCapacity = 16;
@@ -135,6 +137,7 @@ public class RatConfig {
 			piperSpawnDecrease = ConfigHolder.SERVER.piperSpawnDecrease.get();
 
 			ratsSpawnLikeMonsters = ConfigHolder.SERVER.ratsSpawnLikeMonsters.get();
+			garbageRatSpawnLightRule = ConfigHolder.SERVER.garbageRatSpawnLightRule.get();
 			cheesemaking = ConfigHolder.SERVER.cheesemaking.get();
 			milkCauldronTime = ConfigHolder.SERVER.milkCauldronTime.get();
 			ratSackCapacity = ConfigHolder.SERVER.ratSackCapacity.get();
