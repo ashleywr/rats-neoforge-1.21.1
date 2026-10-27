@@ -112,6 +112,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 tasks.named('processResources', ProcessResources).configure {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     def metadataProperties = [
+            mod_version: project.mod_version,
             loader_version_range: project.loader_version_range,
             neoforge_version_range: project.neoforge_version_range,
             minecraft_version_range: project.minecraft_version_range
