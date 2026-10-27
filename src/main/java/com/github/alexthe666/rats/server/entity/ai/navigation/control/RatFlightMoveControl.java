@@ -41,5 +41,23 @@ public class RatFlightMoveControl extends RatMoveControl {
 		} else if (this.operation == Operation.STRAFE) {
 			this.operation = Operation.WAIT;
 		}
+
+		if (this.rat.xxa != 0.0F || this.rat.zza != 0.0F) {
+			float forward = this.rat.zza;
+			float strafe = this.rat.xxa;
+			float speed = (float) (0.02F * this.speedModifier);
+			
+			this.rat.setDeltaMovement(this.rat.getDeltaMovement().add(
+				strafe * speed * Mth.cos(this.rat.getYRot() * Mth.DEG_TO_RAD + Mth.HALF_PI),
+				0.0D,
+				strafe * speed * Mth.sin(this.rat.getYRot() * Mth.DEG_TO_RAD + Mth.HALF_PI)
+			));
+			
+			this.rat.setDeltaMovement(this.rat.getDeltaMovement().add(
+				forward * speed * Mth.cos(this.rat.getYRot() * Mth.DEG_TO_RAD),
+				0.0D,
+				forward * speed * Mth.sin(this.rat.getYRot() * Mth.DEG_TO_RAD)
+			));
+		}
 	}
 }
