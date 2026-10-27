@@ -1,143 +1,44 @@
-Unofficial Port and Fix of Rats Mod by AlexModGuy
+# Rats — Features and Fixes for NeoForge 1.21.1
 
-Original mod by : https://github.com/AlexModGuy
-Unofficial Port by : https://github.com/DearDanielr
-__________________________________________________
+This is my feature and maintenance fork of an existing **unofficial NeoForge 1.21.1 port** of [Rats](https://github.com/AlexModGuy/Rats). I build on the [repaired port maintained by eba67](https://github.com/eba67/Rats-Fix-Port--1.21.1), whose README credits [DearDanielr](https://github.com/DearDanielr) for the unofficial port. I did not create the original mod or that port.
 
-FIXED Crash when try to trade with plague doctor
+My work adds behavior improvements, compatibility changes and repairs on top of that port. This is more than a loader conversion, and it is not an official Rats release.
 
-FIXED Crash when render mobs in ratlantis
+## My changes
 
-FIXED Crash when curdling station rendering fluids
+- Repairs to rat AI, harvesting, transport, movement and upgrade behavior.
+- Dedicated-server and client packet handling fixes.
+- Loot repairs, including the pet-shop chest fallback used with CTOV.
+- Configurable garbage encounter lighting policies; the default remains dark spawning.
+- Selected quarry and flight improvements from the [newer unofficial release line](https://github.com/gabriellj67/Rats-Unofficial-1.21.1NEO), while preserving the existing local repairs.
 
-FIXED Crash when using curdling station
+This fork does not include every feature from the newer unofficial line. Square portals and its new backpack integration have not been imported. The [historical port notes](docs/UPSTREAM_PORT_NOTES.md) are kept separately so their fixes are not mistaken for my work.
 
-FIXED someone methods relationed with nbt and loot
+## Downloads and requirements
 
-Optimized nbt files
+Download the matching runtime JAR from [my releases](https://github.com/ashleywr/rats-neoforge-1.21.1/releases).
 
-FIXED structures natural generation 
+- Minecraft **1.21.1**, **NeoForge**, and **Java 21**.
+- **Citadel 2.7.0 or newer** for the matching Minecraft/loader version; the current build was tested with 2.7.1.
+- JEI and Jade are optional client integrations. See the chosen release for its exact dependency ranges.
 
-FIXED some crashes/bugs caused by incorrectly named folders and files
+Install the matching build on the server and clients. Close Minecraft before replacing its JAR and keep only one Rats build installed. Existing mod and registry IDs remain `rats`; the repository rename does not rename saved-world content.
 
-FIXED plague doctor spamming invisibility potions non-stop at night
+## Building and validation
 
-FIXED server attempting to import ClientLevel
-
-Added Earthworks Compat
-
-FIXED crash when trying to summon dutchrat
-
-FIXED crash when rat manipulates fluids
-
-FIXED crafts with empty tag ( ex: c:string )  
-
-FIXED Attempt to load the client class (CreativeTabClientHelper) on the server
-
-FIXED The rat follows the player with excessive teleporting
-
-FIXED Natural spawn of Pied Piper and rats
-
-FIXED remaining empty tags
-c:dusts/prismarine
-c:gravel
-c:gunpowder
-c:stone
-c:cobblestone/mossy
-
-FIXED SyncThrownBlockPacket being sent incorrectly during the Neo-Ratlantean fight
-
-Change in the generation of rats from 3 at a time to 2.
-
-FIXED anvil enchantment on mod equipments
-
-FIXED Ratlantis sword deals no damage
-
-FIXED Rats do not spawn in Garbage ( they would spawn, but it was extremely rare )
-
-FIXED enchantment by the enchanting table on mod equipments
-
-FIXED Upgrades models don't have effects in singleplayer before player quit and re-enters in world
-
-FIXED Basic speed upgrade is excessively fast
-
-FIXED :The flying upgrade wasn't working
-
-FIXED :Rendering crash when using the buccaneer upgrade
-
-FIXED :Flight error in other upgrades
--Bee Upgrade
--Dragon Upgrade
--Biplane Mount
-
-FIXED :Rats don't drop items
-raw_rat: 100% chance
-rat_pelt: 25% chance
-rat_skull: 5% chance
-rat_paw: 10% chance
-chunky_cheese_token: 0.01% chance (ratlantis)
-plague_essence: 5% chance (if have plague)
-plague_tome: 0.35% chance (if have plague)
-
-FIXED :The rat cannot move with other mount upgrades
--Golem Mount Upgrade
--Strider Mount Upgrade
--Chicken Mount Upgrade
--Beast Mount Upgrade
-
-FIXED :With the automaton upgrade, the rats couldn't walk
-
-FIXED :Rats and Pied Piper don't Spawn in garbage pile
-
-FIXED petshops loot table (#4)
-- desert.nbt
-- plains.nbt
-- savanna.nbt
-- taiga.nbt
-- snowy.nbt
-- legacy_pet_shop.nbt
-- zombie_desert.nbt
-- zombie_plains.nbt
-- zombie_savanna.nbt
-- zombie_snowy.nbt
-- zombie_taiga.nbt
-
-FIXED mod banners doesn't exist
-- Cheese Banner Pattern
-- Rat and Crossbones Banner Pattern
-- Rat and Sickle Banner Pattern
-- Rat Banner Pattern
-
-FIXED rat pathfinding in quarry platform (#6)
-
-Modified the deposit rat system in quarry
-
-FIXED crash when using mob filter upgrade with Re:Avaritia Mod (#10)
-
-<!-- ashley-release-information -->
-
-## Ashley's builds
-
-This is an unofficial maintenance fork. Original authors retain ownership and credit. See the [upstream project](https://github.com/eba67/Rats-Fix-Port--1.21.1) for the original mod. Local changes do not imply upstream endorsement.
-
-Licensing: **LGPL-3.0**. Existing license files, copyright notices, attribution and any separate asset terms remain in force. This fork does not relicense upstream work.
-
-Provided **AS IS**, without warranty of any kind. Maintenance, updates and support are best effort; compatibility with every modpack is not guaranteed.
-
-### Downloads and installation
-
-Download a runtime `.jar` from [GitHub Releases](https://github.com/ashleywr/Rats-Fix-Port--1.21.1/releases). Use the Minecraft version and loader named in that release and install its required dependencies. Do not install `-sources`, `-dev`, `-slim`, `-common` or test JARs as the mod.
-
-Close Minecraft, back up your world, and place the matching runtime JAR in the instance's `mods/` directory. Replace older versions of this same mod rather than loading duplicates. For content mods, install matching versions on the server and its clients unless the release explicitly says client-only or server-only.
-
-### Building and reporting problems
-
-Use Java 21 and the checked-in Gradle wrapper:
+Use Java 21 and the checked-in wrapper:
 
 ```powershell
 .\gradlew.bat build
+.\gradlew.bat runGameTestServer
 ```
 
-Build outputs are under `build/libs/` or each loader subproject's `build/libs/`. Some projects require the local development dependencies described above; those dependencies are not included in the download.
+The current maintenance build passed all **55 required dedicated-server GameTests**. The suite covers selected gameplay, AI, loot and port regressions; it does not establish that every feature or modpack combination works. Test sources and their disposable world are separate from the runtime JAR.
 
-For a problem report, include the exact release filename, Minecraft and loader versions, relevant mod versions, `logs/latest.log`, and a crash report if one was written. Remove private information before sharing logs. Remove the JAR to uninstall; worlds containing this mod's blocks, entities or world generation may require restoring a backup.
+For problems introduced by this fork, use [this repository's issue tracker](https://github.com/ashleywr/rats-neoforge-1.21.1/issues) and include the release filename, loader/dependency versions, logs and a reproduction. Do not send fork-specific support requests to the original authors.
+
+## Credits and license
+
+The original Rats mod is by AlexModGuy/AlexThe666, GizmoTheMoonPig and its contributors. The earlier unofficial port and repair work retain their own author credits, including DearDanielr and eba67. Selected newer backports are credited to the gabriellj67 release line.
+
+The fork remains under **LGPL-3.0**, with the existing license, copyright notices and asset attributions retained. My changes do not imply endorsement by the original authors or port maintainers. Builds are provided as is; maintenance is best effort.
